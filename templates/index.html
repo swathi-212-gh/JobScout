@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Infopark Job Scraper</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f4f5f7;
+      color: #333;
+    }
+
+    header {
+      background-color: #6b21a8;
+      padding: 20px 40px;
+      color: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    input[type="text"],
+    select {
+      padding: 10px 14px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    input[type="checkbox"] {
+      margin-left: 10px;
+      transform: scale(1.2);
+    }
+
+    button {
+      background-color: #6b21a8;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:active {
+      background-color: #4c1d95; 
+    }  
+
+    .job-card {
+      border: 1px solid #e0e0e0;
+      border-left: 6px solid #6b21a8;
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      background: #fafafa;
+      transition: box-shadow 0.2s ease-in-out;
+    }
+
+    .job-card:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    }
+
+    .job-card strong {
+      font-size: 18px;
+      color: #4f46e5;
+    }
+
+    .job-card small {
+      display: block;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .job-card a {
+      text-decoration: none;
+      color: #2563eb;
+      font-weight: 500;
+    }
+
+    .job-card button {
+      margin-top: 8px;
+      padding: 8px 14px;
+      font-size: 14px;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    i {
+      color: #666;
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+
+    .clicked{
+      background-color: #4c1d95;
+    }
+
+    @media (max-width: 768px) {
+      form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>JobScout</h1>
+  </header>
+
+  <div class="container">
+    <form method="POST">
+      <input type="text" name="keyword" placeholder="Enter job">
+      
+      <select name="location_id">
+        <option value="">All Locations</option>
+        <option value="1">Infopark Kochi Phase 1</option>
+        <option value="2">Infopark Kochi Phase 2</option>
+        <option value="4">Infopark Cherthala</option>
+        <option value="5">Infopark Thrissur</option>
+      </select>
+
+      <select name="sort_order">
+        <option value="none">Sort by date</option>
+        <option value="asc">Oldest First</option>
+        <option value="desc">Newest First</option>
+      </select>
+
+      <select name="company_sort">
+        <option value="none">Sort by Company</option>
+        <option value="asc">A-Z</option>
+        <option value="desc">Z-A</option>
+      </select>
+
+<!--   <label>
+        <input type="checkbox" name="hide_expired"> Hide Expired Jobs
+      </label>--->
+
+      <button type="submit">Search</button>
+      <a href="{{ url_for('saved') }}"><button type="button">View Saved Jobs</button></a>
+    </form>
+
+    {% if jobs %}
+      <h2>Job Offers at {{ element }}</h2>
+      <i>{{ offers }} offers found</i>
+
+      {% for job in jobs %}
+        <div class="job-card">
+          <strong>{{ job.title }}</strong>
+          <small>Company: {{ job.company }}</small>
+          <small>Last Date: {{ job.date }}</small>
+          <a href="{{ job.link }}" target="_blank">View Details</a><br />
+          <button onclick="Save_jobs('{{ job.title }}', '{{ job.company }}', '{{ job.date }}', '{{ job.link }}')">Save</button>
+        </div>
+      {% endfor %}
+    {% else %}
+      <h2>No such jobs found</h2>
+    {% endif %}
+  </div>
+
+  <script>
+    function Save_jobs(title, company, date, link) {
+        const button=event.target;
+        button.disable= true;
+        button.classList.add('clicked');
+
+      fetch('/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: title,
+          company: company,
+          date: date,
+          link: link
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+      })
+      .catch(error => {
+        console.error("Error saving job:", error);
+        alert("Error saving job.");
+      });
+    }
+  </script>
+
+</body>
+</html>

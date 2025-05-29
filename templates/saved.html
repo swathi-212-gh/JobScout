@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Saved Jobs</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f4f5f7;
+      color: #333;
+    }
+
+    header {
+      background-color: #6b21a8;
+      padding: 20px 40px;
+      color: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      margin-left: 20px;
+      transition: opacity 0.3s ease;
+    }
+
+    nav a:hover {
+      opacity: 0.8;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .job-card {
+      border: 1px solid #e0e0e0;
+      border-left: 6px solid #6b21a8;
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      background: #fafafa;
+      transition: box-shadow 0.2s ease-in-out;
+    }
+
+    .job-card:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    }
+
+    .job-card strong {
+      font-size: 18px;
+      color: #4f46e5;
+    }
+
+    .job-card small {
+      display: block;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .job-card a {
+      text-decoration: none;
+      color: #2563eb;
+      font-weight: 500;
+    }
+
+    .job-card button {
+      margin-top: 8px;
+      padding: 8px 14px;
+      font-size: 14px;
+      background-color: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .job-card button:hover {
+      background-color: #b91c1c;
+    }
+
+    @media (max-width: 768px) {
+      nav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .job-card {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <nav>
+      <h1>Saved Jobs</h1>
+      <div>
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('saved') }}">Refresh</a>
+      </div>
+    </nav>
+  </header>
+
+  <div class="container">
+    {% if jobs %}
+      {% for job in jobs %}
+        <div class="job-card">
+          <strong>{{ job.title }}</strong>
+          <small>Company: {{ job.company }}</small>
+          <small>Last Date: {{ job.date }}</small>
+          <a href="{{ job.link }}" target="_blank">View Details</a><br />
+          <button onclick="delete_job('{{ job.title }}', '{{ job.company }}', '{{ job.date }}', '{{ job.link }}')">Delete</button>
+        </div>
+      {% endfor %}
+    {% else %}
+      <h2>No saved jobs found.</h2>
+    {% endif %}
+  </div>
+
+  <script>
+    function delete_job(title, company, date, link) {
+      fetch('/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: title,
+          company: company,
+          date: date,
+          link: link
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        location.reload();
+      })
+      .catch(error => {
+        console.error("Error deleting job:", error);
+        alert("Failed to delete the job.");
+      });
+    }
+  </script>
+
+</body>
+</html>
